@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:\\MinGW\\lib\\gcc\\mingw32\\8.2.0\\include\\c++",
+                "C:\\Users\\devil\\Desktop\\curlpp\\curlpp-0.8.1",
+                "C:\\Users\\devil\\Desktop\\curlpp\\curlpp-0.8.1\\include",
+                "C:\\Users\\devil\\Desktop\\curlpp\\curlpp-0.8.1\\include\\cURLpp",
+                "C:\\Users\\devil\\Desktop\\curl-7.67.0",
+                "C:\\Users\\devil\\Desktop\\curl-7.67.0\\include",
+                "C:\\Users\\devil\\Desktop\\curl-7.67.0\\include\\curl"
+
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\MinGW\\bin\\gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}
