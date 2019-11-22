@@ -49,7 +49,8 @@ int tasks_task(int state)
 			state = tasks_send;
 			break;
 		case tasks_send:
-			PORTB = presSens | buttons | magTL | magTR | magBR | magBL; // temporary
+			PORTB = presSens | buttons | (up << 0) | (down << 1) | (speed << 2); // temporary
+			//PORTB = magTL;
 			if(ADC == 0)
 				tk--;
 			else
@@ -100,7 +101,7 @@ int main(void)
 	Poll2.TickFct = &B2_task;
 	
 	Mag.state = magStart;
-	Mag.elapsedTime = contTime;
+	Mag.elapsedTime = contTime/2;
 	Mag.period = contTime;
 	Mag.TickFct = &magSense_task;
 	
@@ -109,7 +110,7 @@ int main(void)
 	DDRC = 0xff; PORTC = 0x00;
 	DDRD = 0xff; PORTD = 0x00;
 	*/
-	TimerSet(contTime);
+	TimerSet(contTime/2);
 	TimerOn();
 	
 	

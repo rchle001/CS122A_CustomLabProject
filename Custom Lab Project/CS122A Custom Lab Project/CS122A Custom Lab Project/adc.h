@@ -10,44 +10,33 @@ unsigned char magTL = 0 , magTR =0, magBL=0, magBR=0;
 unsigned char magX = 0;
 unsigned char magY = 0;
 
+char up = 0, down = 0, speed = 0;
+
 void ADC_ON()
 {
 	ADMUX = muxselect;			// changes the adc input, adc select 
-	ADCSRA = (1 << ADEN) | (1 << ADSC); // turns on converter, starts conversion
+	ADCSRA = (1 << ADEN) | (1 << ADSC) | (1 << 6) | (3); // turns on converter, starts conversion
 }
 
 void ADC_SELECT(unsigned char select) // selects the adc input pin
 {
-	if(select < 8) { muxselect = select; ADC_OFF(); ADMUX = muxselect; ADC_ON();}
+	if(select < 8) { muxselect = select; //ADC_OFF();
+		 ADMUX = muxselect; }//ADC_ON();}
 }
 
 void ADC_OFF()
 {
+	while(!(ADCSRA & (1 << 4))); // http://extremeelectronics.co.in/avr-tutorials/using-adc-of-avr-microcontroller/
 	ADCSRA = ~(1 << ADEN) | ~(1 << ADSC);
 }
 
 unsigned char ADC_SEND()
 {
-	return (char)(ADC/68);
+	ADCSRA |= (1 << ADSC);
+	while(!(ADCSRA & (1 << ADIF)));
+	ADCSRA &= ~(1 << ADSC);
+	return (char)(ADC >> 2);
 }
-
-unsigned char magCheck()
-{
-	if((!magTL && !magTR) || (!magBL && !magBR) || (!magTL && !magBL) || (!magTR && !magBR))
-		return 0;
-	else return 1;
-}
-
-void cal()
-{
-	if(!magCheck)
-	{
-	}
-	else{
-	magX = magTL; // temporary
-	}
-}
-
 
 #ifndef PRESSENS_H
 #define PRESSENS_H
@@ -86,8 +75,7 @@ int PRESSENSE_task(int state)
 		
 		case presSample:
 			ADC_SELECT(0);
-			_delay_ms(1);
-			presSens = 15 - ADC_SEND();
+			presSens = 15 - (ADC_SEND() >> 4);
 			break;
 		
 		default:
@@ -114,18 +102,46 @@ int magSense_task(int state)
 		case magRead:
 			state = magRead;
 			ADC_SELECT(1);
-			_delay_ms(1);
-			magTL = 15 - ADC_SEND();
+			magTL = (ADC_SEND() >> 4);
 			ADC_SELECT(2);
-			_delay_ms(1);
-			magBL = 15 - ADC_SEND();
-			_delay_ms(1);
+			magBL = (ADC_SEND() >> 4);
+			/*_delay_ms(1);
 			ADC_SELECT(4);
-			magTR = 15 - ADC_SEND();
+			//magTR = ADC_SEND();
 			_delay_ms(1);
 			ADC_SELECT(3);
-			_delay_ms(1);
-			magBR = 15 - ADC_SEND();
+			_delay_ms(1);*/
+			//magBR = ADC_SEND();
+			if(up && !down)
+			{
+				if(magTL < 7 && magBL < 7) speed = 1;
+				else if(magTL < 7) speed = 2;
+				else speed = 0;
+			}
+			else if(down && !up)
+			{
+				if(magTL < 7 && magBL < 7) speed = 1;
+				else if(magBL < 7) speed = 2;
+				else speed = 0;
+			}
+			else if(!up && !down) {speed = 0;}
+			else
+			{
+				if(magTL < 7 && magBL > 7)
+				{
+					speed = 1; up = 1;
+				}
+				else if(magTL > 7 && magBL < 7)
+				{
+					speed = 1; down = 1;
+				}
+				else
+				{
+					speed = 0;
+				}
+			}
+			up = magBL < 7 ? 1 : 0;
+			down = magTL < 7 ? 1 : 0;
 			break;
 		
 		case magOff:
