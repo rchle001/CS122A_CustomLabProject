@@ -1,16 +1,17 @@
 
-#define F_CPU 8000000UL
-#include <util/delay.h>
+//#define F_CPU 8000000UL
+//#include <util/delay.h>
 #define power 4
 
 unsigned char presSens = 0;
 unsigned char muxselect = 0;
 unsigned int magCalc = 0;
-unsigned char magTL = 0 , magTR =0, magBL=0, magBR=0;
-unsigned char magX = 0;
-unsigned char magY = 0;
+unsigned char magTL = 0 , magTR =0, magBL=0;
 
-char up = 0, down = 0, speed = 0;
+#define l (PINA & 0x08)
+#define r (PINA & 0x10)
+
+char up = 0, down = 0, speed = 0, left = 0, right = 0;
 
 void ADC_ON()
 {
@@ -91,6 +92,10 @@ int PRESSENSE_task(int state)
 
 enum magSense {magStart, magRead, magOff} magSense_state;
 
+unsigned char direction1 = 0;
+unsigned char direction2 = 0;
+// { right, up-right, up, up-left, left, bottom-left, bottom, bottom-right }
+
 int magSense_task(int state)
 {
 	switch(state)
@@ -105,14 +110,7 @@ int magSense_task(int state)
 			magTL = (ADC_SEND() >> 4);
 			ADC_SELECT(2);
 			magBL = (ADC_SEND() >> 4);
-			/*_delay_ms(1);
-			ADC_SELECT(4);
-			//magTR = ADC_SEND();
-			_delay_ms(1);
-			ADC_SELECT(3);
-			_delay_ms(1);*/
-			//magBR = ADC_SEND();
-			if(up && !down)
+			/*if(up && !down)
 			{
 				if(magTL < 7 && magBL < 7) speed = 1;
 				else if(magTL < 7) speed = 2;
@@ -139,9 +137,76 @@ int magSense_task(int state)
 				{
 					speed = 0;
 				}
+			}*/
+			/*
+			switch(left)
+			{
+				case 1:
+					if((up && down) || (!up && !down))
+					{
+						direction1 = 5;
+					}
+					else if(up)
+					{
+						direction1 = 4;
+					}
+					else
+					{
+						direction1 = 6;
+					}
+					break;
+					
+				default:
+					if((up && down) || (!up && !down))
+					{
+						direction1 = 0;
+					}
+					else if(up)
+					{
+						direction1 = 3;
+					}
+					else
+					{
+						direction1 = 7;
+					}
+					break;
 			}
+			switch(right)
+			{
+				case 1:
+					if((up && down) || (!up && !down))
+					{
+						direction1 = 1;
+					}
+					else if(up)
+					{
+						direction1 = 2;
+					}
+					else
+					{
+						direction1 = 8;
+					}
+					break;
+				
+				default:
+					if((up && down) || (!up && !down))
+					{
+						direction1 = 0;
+					}
+					else if(up)
+					{
+						direction1 = 3;
+					}
+					else
+					{
+						direction1 = 7;
+					}
+				break;
+			}*/
 			up = magBL < 7 ? 1 : 0;
 			down = magTL < 7 ? 1 : 0;
+			left = r ? 1 : 0;
+			right = l ? 1 : 0;
 			break;
 		
 		case magOff:
@@ -158,7 +223,7 @@ int magSense_task(int state)
 			break;
 		
 		case magRead:
-			magCalc = magY | (magX << 8);
+			
 			break;
 		
 		case magOff:

@@ -10,6 +10,7 @@
 #include "adc.h"
 #include "scheduler.h"
 #include "buttons.h"
+#include "usart_ATmega1284.h"
 
 
 enum TASKS{tasks_start, tasks_send, tasks_sleep} task_state;
@@ -25,6 +26,7 @@ int tasks_task(int state)
 			DDRC = 0x00; PORTC = 0xff;
 			DDRD = 0xff; PORTD = 0x00;
 			tk = 50;
+			initUSART(1);
 			state = tasks_send;
 			break;
 		case tasks_send:
@@ -49,10 +51,15 @@ int tasks_task(int state)
 			state = tasks_send;
 			break;
 		case tasks_send:
-			PORTB = presSens | buttons | (up << 0) | (down << 1) | (speed << 2); // temporary
+			PORTB = presSens | buttons | direction1 | (speed << 2); // temporary
 			//PORTB = magTL;
-			if(ADC == 0)
+			if(ADC == 0 && presSens == 0 && buttons == 0)
 				tk--;
+			if(USART_IsSendReady(1))
+			{
+				USART_Flush(1);
+				USART_Send(buttons + '0',1);
+			}
 			else
 				tk = 50;
 			break;
