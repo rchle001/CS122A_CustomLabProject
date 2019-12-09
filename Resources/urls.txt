@@ -1,0 +1,39 @@
+https://docs.microsoft.com/en-us/windows-hardware/drivers/gettingstarted/writing-a-umdf-driver-based-on-a-template
+(unused)
+
+https://www.14core.com/wiring-and-flashing-programming-esp-32-esp32s-with-usb-ttl-uart/
+
+https://techtutorialsx.com/2018/03/09/esp32-arduino-serial-communication-over-bluetoth-hello-world/
+
+https://www.winsocketdotnetworkprogramming.com/winsock2programming/winsock2advancedotherprotocol4j.html
+(unused - gave trouble and didn't work as I wanted)
+
+https://www.youtube.com/watch?v=FvIywveUVZw
+(unused - initially was going to use example bluetooth server code, but didn't work out because of failure on wsaquery lookup side)
+
+http://extremeelectronics.co.in/avr-tutorials/using-adc-of-avr-microcontroller/
+(unused in final - used switch hall effect sensors (vertical) instead of linear hall effect sensors)
+
+https://www.youtube.com/watch?v=GiOgWfmWzPY
+(unused - trouble with winsock and visual studio code ; anti-virus acted up in vs code and winsock didn't help with reading bluetooth input)
+
+https://stackoverflow.com/questions/19393407/how-do-i-find-the-port-name-for-a-bluetooth-device-with-a-specific-device-name
+(unused - winsock usage)
+
+https://www.youtube.com/watch?v=Pc99tkwqS4Y
+(mostly unused - didn't usage the uart driver, but instead used packages that were already apart of the esp32 wroom, after updates)
+
+https://lastminuteengineers.com/handling-esp32-gpio-interrupts-tutorial/
+(unused - tried to use uterrupts with USART, but did not go well because apparently using these types of interrupts do not work well with USART)
+
+https://www.codeguru.com/cpp/i-n/network/serialcommunications/article.php/c5425/Serial-Communication-in-Windows.htm
+(Idea used, but not exact)
+
+https://www.youtube.com/watch?v=KRbMqtZoiBw
+(unused)
+
+http://bd.eduweb.hhs.nl/micprg/pdf/serial-win.pdf
+(used - was running out of time when I noticed that COM's 7 and 8 were serial bluetooth, so I searched for how to read from COM ports ; not all of it is needed for the project)
+
+https://github.com/G6EJD/ESP32-Using-Hardware-Serial-Ports/blob/master/ESP32_Using_Serial2.ino
+(used)
