@@ -1,110 +1,187 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
+//#define _WINSOCK_DEPRECATED_NO_WARNINGS
+//#define _CRT_SECURE_NO_WARNINGS
 
-#pragma comment(lib, "ws2_32.lib")
-#include <WinSock2.h>
-#include <ws2bth.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include "stdafx.h"
+//#pragma comment(lib, "ws2_32.lib")
+//#include <WinSock2.h>
+//#include <ws2bth.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <Windows.h>
 #include <iostream>
-
-#define PORT 8
-
-const char szHost[] = "246f280b7b06";
 
 using namespace std;
 
 int main(const int argc, const char* argv[])
 {
-	WSADATA wsaData;
-	WORD DLLVersion = MAKEWORD(2, 2);
-	if (WSAStartup(DLLVersion, &wsaData) != 0)
+	const unsigned int sz = sizeof("connected")*2;
+	char byte[sz] = { 0 };
+
+	// opening file for comport / serial port
+	HANDLE m_hcommPort = CreateFile("COM8", GENERIC_WRITE | GENERIC_READ, 0,0, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
+	if (m_hcommPort == INVALID_HANDLE_VALUE) 
 	{
+		DWORD error = GetLastError();
+		if (error == ERROR_FILE_NOT_FOUND) cout << "file was not found" << endl;
+		else {
+			cout << error << endl;
+		}
+		return -1; 
+	}
+
+	// Getting comstate
+	DCB dcbsp = { 0 };
+	dcbsp.DCBlength = sizeof(dcbsp);
+	if (!GetCommState(m_hcommPort, &dcbsp))
+	{
+		cout << GetLastError() << endl;
 		return 1;
 	}
-	SOCKET blu = socket(AF_BTH, SOCK_STREAM, 3);
-	if (blu < 0)
+
+	// setting port information
+	dcbsp.BaudRate = CBR_9600;
+	dcbsp.ByteSize = 8;
+	dcbsp.StopBits = ONESTOPBIT;
+	dcbsp.Parity = NOPARITY;
+
+	if (!SetCommState(m_hcommPort, &dcbsp))
+	{
+		cout << GetLastError() << endl;
 		return 2;
-	/*
-	SOCKADDR_BTH sin;
-	ZeroMemory(&sin, sizeof(sin));
-	sin.addressFamily = AF_BTH;
-	sin.
-	memcpy(&sin.sin_addr.S_un.S_addr, host->h_addr_list[0], sizeof(sin.sin_addr.S_un.S_addr));
-	if (connect(blu, (const sockaddr*)&sin, sizeof(sin)) != 0)
+	}
+
+	//setting commtimeouts
+	// Doesn't seem to do anything useful, but it seems to 
+
+	COMMTIMEOUTS timeouts = { 0 };
+
+	timeouts.ReadIntervalTimeout = 100;
+	timeouts.ReadTotalTimeoutConstant = 100;
+	timeouts.ReadTotalTimeoutMultiplier = 5;
+	//timeouts.WriteTotalTimeoutConstant = 100;
+	//timeouts.WriteTotalTimeoutMultiplier = 10;
+	
+	if (!SetCommTimeouts(m_hcommPort, &timeouts))
+	{
+		cout << GetLastError() << endl;
 		return 4;
-	*/
-	//SOCKADDR_BTH sockAddr;
-	//SOCKET btSocket;
-	//int error;
+	}
 
-	//btSocket = socket(AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM);
-	//memset(&sockAddr, 0, sizeof(sockAddr));
-	//sockAddr.addressFamily = AF_BTH;
-	//sockAddr.serviceClassId = RFCOMM_PROTOCOL_UUID;
-	//sockAddr.port = BT_PORT_ANY;
-	//WSAQUERYSET querySet;
-	//memset(&querySet, 0, sizeof(querySet));
-	//querySet.dwSize = sizeof(querySet);
-	//querySet.dwNameSpace = NS_BTH;
-	//HANDLE hLookup;
-	//if (0 != WSALookupServiceBegin(&querySet, LUP_CONTAINERS | LUP_FLUSHCACHE | LUP_RETURN_TYPE, &hLookup))
-	//{
-	//	if (WSAGetLastError() != WSASERVICE_NOT_FOUND)
-	//	{
-	//		// error during WSALookupServiceBegin
-	//	}
-	//	else
-	//	{
-	//		//No BlueTooth device Found
-	//	}
-	//	return -1;
-	//}
-	//const unsigned int dlsize = 2000;
-	//DWORD deviceLength = dlsize;
-	//char buf[dlsize];
-	//WSAQUERYSET* pDevice = PWSAQUERYSET(buf); //pDevice->lpServiceClassId = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
-	//while (0 == WSALookupServiceNext(hLookup, LUP_RETURN_ADDR | LUP_RETURN_NAME | LUP_RES_SERVICE | LUP_RETURN_TYPE, (LPDWORD)&deviceLength, pDevice))
-	//{
-	//	PSOCKADDR_BTH sa = PSOCKADDR_BTH(pDevice->lpcsaBuffer->RemoteAddr.lpSockaddr);
-	//	if (sa->addressFamily != AF_BTH)
-	//	{
-	//		// Address family is not AF_BTH  for bluetooth device discovered
-	//		continue;
-	//	}
-	//	//the name is available in pDevice->lpszServiceInstanceName
-	//	//the MAC address is available in sa->btAddr
-	//	cout << pDevice->lpszServiceInstanceName << "\t" << sa->btAddr <<  "\t"  << pDevice->lpServiceClassId << endl;
-	//	if (pDevice->lpszServiceInstanceName == "esps") {
-	//		sockAddr.btAddr = sa->btAddr; 
-	//		cout << sockAddr.btAddr << " " << endl;  break;
-	//	}
-	//}
-	//WSALookupServiceEnd(hLookup);
-	//cout << sockAddr.btAddr << endl;
-	////sockAddr.btAddr = 
-	//	error = connect(btSocket, (SOCKADDR*)&sockAddr, sizeof(sockAddr));
-	//char szBuffer[200];
-	//char szTemp[200];
-	////while (recv(blu, szTemp, 200, 0))
-	//{
-	//	recv(blu, szTemp, 200, 0);
-	//	cout << szTemp << endl;
-	//}
-	//	//strcat(szBuffer, szTemp);
+	DWORD dwBytesRead;
+	INPUT lmouse;
+	INPUT rmouse;
+	INPUT mmouse;
+	INPUT move;
 
-	//printf("%s\n", szBuffer);
+	lmouse.type = INPUT_MOUSE;
+	rmouse.type = INPUT_MOUSE;
+	mmouse.type = INPUT_MOUSE;
+	move.type = INPUT_MOUSE;
 
-	//closesocket(blu);
-	//getchar();
-	const unsigned int sz = 1000;
-	bool read; char byte[sz];
-	HANDLE m_hcommPort = ::CreateFile("COM8", GENERIC_WRITE | GENERIC_READ, 0,0, OPEN_EXISTING, 0, 0);
-	if (m_hcommPort == INVALID_HANDLE_VALUE) { cout << GetLastError() << endl; return -1; }
 	while (1) {
-		read = ::ReadFile(m_hcommPort, byte, sizeof(byte), NULL, NULL);
-		cout << byte[0] + '0' << endl;
+		unsigned char direction=0;
+		unsigned char buttons=0;
+		unsigned char pressure=0;
+		if (!ReadFile(m_hcommPort, byte, sizeof(byte), &dwBytesRead, NULL))
+		{
+			cout << GetLastError() << endl;
+			CloseHandle(m_hcommPort);
+			return -2;
+		}
+		if (dwBytesRead > 0) {
+			cout << byte << endl;
+			direction = byte[0] >> 4;
+			buttons = (byte[0] >> 2) & 0x03;
+			pressure = byte[0] & 0x03;
+		}
+		if (pressure > 0)
+		{
+			lmouse.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+			SendInput(1, &lmouse, sizeof(lmouse));
+			ZeroMemory(&lmouse, sizeof(lmouse));
+		}
+		else
+		{
+			lmouse.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+			SendInput(1, &lmouse, sizeof(lmouse));
+			ZeroMemory(&lmouse, sizeof(lmouse));
+		}
+		if (buttons > 0)
+		{
+			if (buttons & 0x01)
+			{
+				rmouse.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+				SendInput(1, &rmouse, sizeof(rmouse));
+				ZeroMemory(&rmouse, sizeof(rmouse));
+			}
+			else
+			{
+				rmouse.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+				SendInput(1, &rmouse, sizeof(rmouse));
+				ZeroMemory(&rmouse, sizeof(rmouse));
+			}
+			if (buttons & 0x02)
+			{
+				mmouse.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
+				SendInput(1, &mmouse, sizeof(mmouse));
+				ZeroMemory(&mmouse, sizeof(mmouse));
+			}
+			else
+			{
+				mmouse.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
+				SendInput(1, &mmouse, sizeof(mmouse));
+				ZeroMemory(&mmouse, sizeof(mmouse));
+			}
+		}
+		if (direction > 0)
+		{
+			move.mi.dwFlags = MOUSEEVENTF_MOVE;
+			switch (direction)
+			{
+			case 0x0a:
+				move.mi.dx = -25;
+				move.mi.dy = -25;
+				break;
+
+			case 0x08:
+				move.mi.dx = 0;
+				move.mi.dy = -40;
+				break;
+
+			case 0x04:
+				move.mi.dx = 0;
+				move.mi.dy = 40;
+				break;
+
+			case 0x02:
+				move.mi.dx = -40;
+				move.mi.dy = 0;
+				break;
+
+			case 0x01:
+				move.mi.dx = 40;
+				move.mi.dy = 0;
+				break;
+
+			case 0x09:
+				move.mi.dx = 25;
+				move.mi.dy = -25;
+				break;
+
+			case 0x06:
+				move.mi.dx = -25;
+				move.mi.dy = 25;
+				break;
+
+			case 0x05:
+				move.mi.dx = 25;
+				move.mi.dy = 25;
+				break;
+				
+			}
+			SendInput(1, &move, sizeof(move));
+			ZeroMemory(&move, sizeof(move));
+		}
 	}
 	return 0;
 }
