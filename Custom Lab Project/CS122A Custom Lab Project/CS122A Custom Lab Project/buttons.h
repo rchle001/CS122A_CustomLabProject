@@ -1,8 +1,8 @@
 #ifndef  BUTTONS_H
 #define BUTTONS_H
 
-#define button1 (~PINC & 0x01)
-#define button2 (~PINC & 0x02)
+#define button1 (~PINB & (1 << 5))
+#define button2 (~PINB & (1 << 6))
 
 enum B1 {B1_start, B1_sample, B1_wait} B1_states;
 enum B2 {B2_start, B2_sample, B2_wait} B2_states;

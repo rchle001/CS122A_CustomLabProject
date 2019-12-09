@@ -22,11 +22,11 @@ int tasks_task(int state)
 	{
 		case tasks_start:			// initializes all ports
 			DDRA = 0x00; PORTA = 0xff;
-			DDRB = 0xff; PORTB = 0x00;
+			DDRB = 0x00; PORTB = 0xff;
 			DDRC = 0x00; PORTC = 0xff;
 			DDRD = 0xff; PORTD = 0x00;
 			tk = 50;
-			initUSART(1);
+			initUSART(0);
 			state = tasks_send;
 			break;
 		case tasks_send:
@@ -51,17 +51,15 @@ int tasks_task(int state)
 			state = tasks_send;
 			break;
 		case tasks_send:
-			PORTB = presSens | buttons | direction1 | (speed << 2); // temporary
+			//PORTB = presSens | buttons | direction1 | (speed << 2); // temporary
 			//PORTB = magTL;
-			if(ADC == 0 && presSens == 0 && buttons == 0)
-				tk--;
-			if(USART_IsSendReady(1))
+			/*if(ADC == 0 && presSens == 0 && buttons == 0)
+				tk--;*/
+			if(USART_IsSendReady(0))
 			{
-				USART_Flush(1);
-				USART_Send(buttons + '0',1);
+				unsigned char send = (buttons << 2) | (presSens >> 2) | ((direction & 0x0f) << 4);
+				USART_Send(send,0);
 			}
-			else
-				tk = 50;
 			break;
 		case tasks_sleep:
 			//sleep();
@@ -78,7 +76,7 @@ int tasks_task(int state)
 int main(void)
 {
     /* Replace with your application code */
-	unsigned char contTime = 100;
+	unsigned char contTime = 400;
 	
 	task  controller;
 	task  Pressure;
@@ -93,23 +91,23 @@ int main(void)
 	
 	Pressure.state = presStart;
 	Pressure.TickFct = &PRESSENSE_task;
-	Pressure.elapsedTime = contTime;
-	Pressure.period = contTime;
+	Pressure.elapsedTime = contTime/2;
+	Pressure.period = contTime/2;
 	tasksPeriodGCD = contTime;
 	
 	Poll1.state = B1_start;
-	Poll1.elapsedTime = contTime;
-	Poll1.period = contTime;
+	Poll1.elapsedTime = contTime/2;
+	Poll1.period = contTime/2;
 	Poll1.TickFct = &B1_task;
 	
 	Poll2.state = B2_start;
-	Poll2.elapsedTime = contTime;
-	Poll2.period = contTime;
+	Poll2.elapsedTime = contTime/2;
+	Poll2.period = contTime/2;
 	Poll2.TickFct = &B2_task;
 	
 	Mag.state = magStart;
 	Mag.elapsedTime = contTime/2;
-	Mag.period = contTime;
+	Mag.period = contTime/2;
 	Mag.TickFct = &magSense_task;
 	
 	/*DDRA = 0x00; PORTA = 0xff;
@@ -126,7 +124,6 @@ int main(void)
 	tasksNum = 5;
 	//task * temp[] = {Pressure};
 		
-	unsigned char selector = 0;
 	//ADC_ON();
     while (1) 
     {

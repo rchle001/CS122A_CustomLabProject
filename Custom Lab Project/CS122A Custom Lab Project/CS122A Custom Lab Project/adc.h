@@ -5,13 +5,10 @@
 
 unsigned char presSens = 0;
 unsigned char muxselect = 0;
-unsigned int magCalc = 0;
-unsigned char magTL = 0 , magTR =0, magBL=0;
+unsigned char compass1 = 0, compass2 = 0, direction = 0;
 
 #define l (PINA & 0x08)
 #define r (PINA & 0x10)
-
-char up = 0, down = 0, speed = 0, left = 0, right = 0;
 
 void ADC_ON()
 {
@@ -92,121 +89,24 @@ int PRESSENSE_task(int state)
 
 enum magSense {magStart, magRead, magOff} magSense_state;
 
-unsigned char direction1 = 0;
-unsigned char direction2 = 0;
 // { right, up-right, up, up-left, left, bottom-left, bottom, bottom-right }
 
 int magSense_task(int state)
 {
+	static unsigned char TL;
+	static unsigned char TR;
+	static unsigned char BL;
+	static unsigned char BR;
 	switch(state)
 	{
 		case magStart:
+			TL = TR = BL = BR = 0;
 			state = magRead;
 			break;
 		
 		case magRead:
 			state = magRead;
-			ADC_SELECT(1);
-			magTL = (ADC_SEND() >> 4);
-			ADC_SELECT(2);
-			magBL = (ADC_SEND() >> 4);
-			/*if(up && !down)
-			{
-				if(magTL < 7 && magBL < 7) speed = 1;
-				else if(magTL < 7) speed = 2;
-				else speed = 0;
-			}
-			else if(down && !up)
-			{
-				if(magTL < 7 && magBL < 7) speed = 1;
-				else if(magBL < 7) speed = 2;
-				else speed = 0;
-			}
-			else if(!up && !down) {speed = 0;}
-			else
-			{
-				if(magTL < 7 && magBL > 7)
-				{
-					speed = 1; up = 1;
-				}
-				else if(magTL > 7 && magBL < 7)
-				{
-					speed = 1; down = 1;
-				}
-				else
-				{
-					speed = 0;
-				}
-			}*/
-			/*
-			switch(left)
-			{
-				case 1:
-					if((up && down) || (!up && !down))
-					{
-						direction1 = 5;
-					}
-					else if(up)
-					{
-						direction1 = 4;
-					}
-					else
-					{
-						direction1 = 6;
-					}
-					break;
-					
-				default:
-					if((up && down) || (!up && !down))
-					{
-						direction1 = 0;
-					}
-					else if(up)
-					{
-						direction1 = 3;
-					}
-					else
-					{
-						direction1 = 7;
-					}
-					break;
-			}
-			switch(right)
-			{
-				case 1:
-					if((up && down) || (!up && !down))
-					{
-						direction1 = 1;
-					}
-					else if(up)
-					{
-						direction1 = 2;
-					}
-					else
-					{
-						direction1 = 8;
-					}
-					break;
-				
-				default:
-					if((up && down) || (!up && !down))
-					{
-						direction1 = 0;
-					}
-					else if(up)
-					{
-						direction1 = 3;
-					}
-					else
-					{
-						direction1 = 7;
-					}
-				break;
-			}*/
-			up = magBL < 7 ? 1 : 0;
-			down = magTL < 7 ? 1 : 0;
-			left = r ? 1 : 0;
-			right = l ? 1 : 0;
+			
 			break;
 		
 		case magOff:
@@ -223,7 +123,30 @@ int magSense_task(int state)
 			break;
 		
 		case magRead:
-			
+			TL = (~PINB & 0x02) ? 0x0a : 0;
+			TR = (~PINB & 0x04) ? 0x09 : 0;
+			BL = (~PINB & 0x08) ? 0x06 : 0;
+			BR = (~PINB & 0x10) ? 0x05 : 0;
+			compass1 = compass2;
+			compass2 = (TL ) | (TR) | (BL) | (BR);
+			if(compass2 != 0 && compass2 != compass1 && compass1 != 0)
+			{
+				if(compass1 & 0x08 && compass2 & 0x08) {
+					compass2 &= ~(1 << 0x08);
+				}
+				if(compass1 & 0x04 && compass2 & 0x04) {
+					compass2 &= ~(1 << 0x04);
+				}
+				if(compass1 & 0x02 && compass2 & 0x02) {
+					compass2 &= ~(1 << 0x02);
+				}
+				if(compass1 & 0x01 && compass2 & 0x01) {
+					compass2 &= ~(1 << 0x01);
+				}
+				direction = compass2;
+			}
+			else
+				direction = 0;
 			break;
 		
 		case magOff:
